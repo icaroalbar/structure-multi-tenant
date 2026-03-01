@@ -1,28 +1,24 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import jwt from 'jsonwebtoken';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
 import { PostgresService } from '../src/infrastructure/persistence/postgres.service';
 import { RedisService } from '../src/infrastructure/cache/redis.service';
 
-function buildJwt(payload: Record<string, unknown>): string {
-  const base64Url = (value: string): string =>
-    Buffer.from(value, 'utf-8')
-      .toString('base64')
-      .replace(/=/g, '')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_');
-
-  const header = base64Url(JSON.stringify({ alg: 'none', typ: 'JWT' }));
-  const body = base64Url(JSON.stringify(payload));
-  return `${header}.${body}.signature`;
+function buildJwt(payload: Record<string, unknown>, secret: string): string {
+  return jwt.sign(payload, secret, { expiresIn: '1h' });
 }
 
 describe('API bootstrap', () => {
   let app: INestApplication;
+  const jwtSecret = 'test-secret';
 
   beforeAll(async () => {
+    process.env.JWT_SECRET = jwtSecret;
+    process.env.JWT_ALGORITHM = 'HS256';
+
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule]
     })
@@ -53,7 +49,7 @@ describe('API bootstrap', () => {
   });
 
   it('GET /tenant/me extracts tenant_id from JWT', async () => {
-    const token = buildJwt({ sub: 'user-1', tenant_id: 'tenant-acme' });
+    const token = buildJwt({ sub: 'user-1', tenant_id: 'tenant-acme' }, jwtSecret);
 
     const response = await request(app.getHttpServer())
       .get('/tenant/me')
