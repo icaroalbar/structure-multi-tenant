@@ -1,15 +1,15 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 import type { TenantContext } from '../../domain/tenancy/tenant-context';
-import type { TenantAwareRequest } from '../../interfaces/http/tenant-aware-request';
+import type { GetTenantContextInput } from './get-tenant-context.input';
 
 @Injectable()
 export class GetTenantContextUseCase {
-  execute(request: TenantAwareRequest): TenantContext {
-    if (!request.tenantContext) {
+  execute(input: GetTenantContextInput): TenantContext {
+    if (!input.tenantContext) {
       throw new UnauthorizedException('Tenant context not available');
     }
 
-    return request.tenantContext;
+    return input.tenantContext;
   }
 }

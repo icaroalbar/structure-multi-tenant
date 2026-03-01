@@ -14,6 +14,8 @@ function buildJwt(payload: Record<string, unknown>, secret: string): string {
 describe('API bootstrap', () => {
   let app: INestApplication;
   const jwtSecret = 'test-secret';
+  const originalJwtSecret = process.env.JWT_SECRET;
+  const originalJwtAlgorithm = process.env.JWT_ALGORITHM;
 
   beforeAll(async () => {
     process.env.JWT_SECRET = jwtSecret;
@@ -34,6 +36,18 @@ describe('API bootstrap', () => {
 
   afterAll(async () => {
     await app.close();
+
+    if (originalJwtSecret === undefined) {
+      delete process.env.JWT_SECRET;
+    } else {
+      process.env.JWT_SECRET = originalJwtSecret;
+    }
+
+    if (originalJwtAlgorithm === undefined) {
+      delete process.env.JWT_ALGORITHM;
+    } else {
+      process.env.JWT_ALGORITHM = originalJwtAlgorithm;
+    }
   });
 
   it('GET /health returns ok when dependencies are up', async () => {

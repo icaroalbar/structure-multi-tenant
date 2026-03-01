@@ -1,5 +1,6 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 
+import type { GetTenantContextInput } from '../../application/tenancy/get-tenant-context.input';
 import { GetTenantContextUseCase } from '../../application/tenancy/get-tenant-context.usecase';
 import { TenantAuthGuard } from '../../infrastructure/auth/tenant-auth.guard';
 import type { TenantAwareRequest } from './tenant-aware-request';
@@ -12,6 +13,10 @@ export class TenantController {
   @Get('me')
   @UseGuards(TenantAuthGuard)
   me(@Req() request: TenantAwareRequest): TenantContext {
-    return this.getTenantContextUseCase.execute(request);
+    const input: GetTenantContextInput = {
+      tenantContext: request.tenantContext
+    };
+
+    return this.getTenantContextUseCase.execute(input);
   }
 }

@@ -1,17 +1,16 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import jwt, {
-  type Algorithm,
   JsonWebTokenError,
   JwtPayload,
   TokenExpiredError
 } from 'jsonwebtoken';
 
 import type { TenantContext } from '../../domain/tenancy/tenant-context';
+import { loadJwtRuntimeConfig } from './jwt-config';
 
 @Injectable()
 export class JwtTenantExtractor {
-  private readonly jwtSecret = process.env.JWT_SECRET ?? 'dev-secret';
-  private readonly jwtAlgorithm = process.env.JWT_ALGORITHM ?? 'HS256';
+  private readonly jwtConfig = loadJwtRuntimeConfig();
 
   extractFromAuthorization(authorizationHeader?: string): TenantContext {
     if (!authorizationHeader?.startsWith('Bearer ')) {
@@ -44,8 +43,8 @@ export class JwtTenantExtractor {
 
   private verifyAndDecode(token: string): JwtPayload & { tenant_id?: unknown } {
     try {
-      const payload = jwt.verify(token, this.jwtSecret, {
-        algorithms: [this.jwtAlgorithm as Algorithm]
+      const payload = jwt.verify(token, this.jwtConfig.secret, {
+        algorithms: [this.jwtConfig.algorithm]
       });
 
       if (typeof payload === 'string') {

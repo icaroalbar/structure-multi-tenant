@@ -5,10 +5,26 @@ import { JwtTenantExtractor } from './jwt-tenant-extractor';
 
 describe('JwtTenantExtractor', () => {
   const secret = 'test-secret';
+  const originalJwtSecret = process.env.JWT_SECRET;
+  const originalJwtAlgorithm = process.env.JWT_ALGORITHM;
 
   beforeEach(() => {
     process.env.JWT_SECRET = secret;
     process.env.JWT_ALGORITHM = 'HS256';
+  });
+
+  afterAll(() => {
+    if (originalJwtSecret === undefined) {
+      delete process.env.JWT_SECRET;
+    } else {
+      process.env.JWT_SECRET = originalJwtSecret;
+    }
+
+    if (originalJwtAlgorithm === undefined) {
+      delete process.env.JWT_ALGORITHM;
+    } else {
+      process.env.JWT_ALGORITHM = originalJwtAlgorithm;
+    }
   });
 
   it('extracts tenant context when token is valid', () => {
@@ -75,5 +91,23 @@ describe('JwtTenantExtractor', () => {
     expect(() => extractor.extractFromAuthorization(`Bearer ${token}`)).toThrow(
       new UnauthorizedException('tenant_id claim is required')
     );
+  });
+
+  it('throws when JWT_SECRET is missing', () => {
+    delete process.env.JWT_SECRET;
+
+    expect(() => new JwtTenantExtractor()).toThrow(new Error('JWT_SECRET is required'));
+  });
+
+  it('throws when JWT_ALGORITHM is missing', () => {
+    delete process.env.JWT_ALGORITHM;
+
+    expect(() => new JwtTenantExtractor()).toThrow(new Error('JWT_ALGORITHM is required'));
+  });
+
+  it('throws when JWT_ALGORITHM is invalid', () => {
+    process.env.JWT_ALGORITHM = 'INVALID_ALG';
+
+    expect(() => new JwtTenantExtractor()).toThrow(new Error('JWT_ALGORITHM is invalid'));
   });
 });
