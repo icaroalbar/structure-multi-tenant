@@ -1,0 +1,9 @@
+_format_version: "3.0"
+
+services:
+  - name: api-service
+    url: http://api:3000
+    routes:
+      - name: api-route
+        paths:
+          - /api

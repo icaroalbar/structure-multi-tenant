@@ -1,0 +1,14 @@
+[features]
+multi_agent = true
+
+[agents]
+max_threads = 6
+max_depth = 1
+
+[agents.platform_architect]
+description = "Arquiteto de plataforma containerizada enterprise."
+config_file = "agents/platform-architect.toml"
+
+[agents.worker]
+description = "Executa geração de arquivos seguindo arquitetura."
+config_file = "agents/worker.toml"
