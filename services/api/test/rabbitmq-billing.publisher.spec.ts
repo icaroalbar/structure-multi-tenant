@@ -9,6 +9,7 @@ jest.mock('amqplib', () => ({
 }));
 
 describe('RabbitMqBillingPublisher', () => {
+  const originalEnv = process.env;
   const connectMock = connect as jest.MockedFunction<typeof connect>;
 
   const channel = {
@@ -25,8 +26,13 @@ describe('RabbitMqBillingPublisher', () => {
   } as unknown as ChannelModel;
 
   beforeEach(() => {
+    process.env = originalEnv;
     jest.clearAllMocks();
     connectMock.mockResolvedValue(connection);
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
   });
 
   it('publishes billing job in Nest RMQ pattern/data envelope', async () => {
@@ -58,6 +64,39 @@ describe('RabbitMqBillingPublisher', () => {
 
     expect(JSON.parse(body.toString())).toEqual(
       createNestRmqEventEnvelope('billing.job.created', message)
+    );
+  });
+
+  it('respects explicit RABBITMQ_DLQ_ROUTING_KEY during topology declaration', async () => {
+    process.env = {
+      ...originalEnv,
+      RABBITMQ_QUEUE: 'billing.jobs.custom',
+      RABBITMQ_DLX: 'billing.dlx.custom',
+      RABBITMQ_DLQ: 'billing.jobs.custom.dlq',
+      RABBITMQ_DLQ_ROUTING_KEY: 'billing.jobs.custom.dlq.route'
+    };
+    const publisher = new RabbitMqBillingPublisher();
+    const message = {
+      tenantId: 'tenant-a',
+      jobId: 'job-2',
+      customerId: 'customer-2',
+      amount: 200,
+      issuedAt: '2026-03-01T00:00:00.000Z'
+    };
+
+    await publisher.publish(message);
+
+    expect(channel.assertQueue).toHaveBeenCalledWith('billing.jobs.custom', {
+      durable: true,
+      arguments: {
+        'x-dead-letter-exchange': 'billing.dlx.custom',
+        'x-dead-letter-routing-key': 'billing.jobs.custom.dlq.route'
+      }
+    });
+    expect(channel.bindQueue).toHaveBeenCalledWith(
+      'billing.jobs.custom.dlq',
+      'billing.dlx.custom',
+      'billing.jobs.custom.dlq.route'
     );
   });
 });

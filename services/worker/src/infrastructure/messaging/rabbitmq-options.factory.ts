@@ -1,5 +1,6 @@
 import { Transport, type RmqOptions } from '@nestjs/microservices';
 
+import { createPrimaryQueueArguments } from '../../../../shared/contracts/rabbitmq-topology.contract';
 import { RABBITMQ_TOPOLOGY } from './rabbitmq.constants';
 
 export function createWorkerRmqOptions(): RmqOptions {
@@ -12,10 +13,7 @@ export function createWorkerRmqOptions(): RmqOptions {
       prefetchCount: 1,
       queueOptions: {
         durable: true,
-        arguments: {
-          'x-dead-letter-exchange': RABBITMQ_TOPOLOGY.deadLetterExchange,
-          'x-dead-letter-routing-key': RABBITMQ_TOPOLOGY.deadLetterRoutingKey
-        }
+        arguments: createPrimaryQueueArguments(RABBITMQ_TOPOLOGY)
       }
     }
   };

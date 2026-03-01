@@ -2,6 +2,10 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { Channel, ChannelModel, connect } from 'amqplib';
 import { createNestRmqEventEnvelope } from '../../../../../../shared/contracts/billing-job.contract';
 import {
+  declareRabbitMqTopology,
+  resolveRabbitMqTopology
+} from '../../../../../../shared/contracts/rabbitmq-topology.contract';
+import {
   BillingJobMessage,
   BillingPublisher,
 } from './billing-publisher.port';
@@ -14,13 +18,7 @@ export class RabbitMqBillingPublisher
   private connection?: ChannelModel;
   private channel?: Channel;
 
-  private readonly rabbitUrl = process.env.RABBITMQ_URL ?? 'amqp://localhost:5672';
-  private readonly exchange = process.env.RABBITMQ_EXCHANGE ?? 'billing.events';
-  private readonly queue = process.env.RABBITMQ_QUEUE ?? 'billing.jobs';
-  private readonly routingKey =
-    process.env.RABBITMQ_ROUTING_KEY ?? 'billing.job.created';
-  private readonly dlx = process.env.RABBITMQ_DLX ?? 'billing.dlx';
-  private readonly dlq = process.env.RABBITMQ_DLQ ?? 'billing.jobs.dlq';
+  private readonly topology = resolveRabbitMqTopology();
 
   async onModuleInit(): Promise<void> {
     try {
@@ -36,22 +34,11 @@ export class RabbitMqBillingPublisher
       return this.channel;
     }
 
-    this.connection = await connect(this.rabbitUrl);
+    this.connection = await connect(this.topology.url);
     const channel = await this.connection.createChannel();
     this.channel = channel;
 
-    await channel.assertExchange(this.exchange, 'direct', { durable: true });
-    await channel.assertExchange(this.dlx, 'direct', { durable: true });
-
-    await channel.assertQueue(this.queue, {
-      durable: true,
-      deadLetterExchange: this.dlx,
-      deadLetterRoutingKey: this.dlq,
-    });
-    await channel.assertQueue(this.dlq, { durable: true });
-
-    await channel.bindQueue(this.queue, this.exchange, this.routingKey);
-    await channel.bindQueue(this.dlq, this.dlx, this.dlq);
+    await declareRabbitMqTopology(channel, this.topology);
 
     return channel;
   }
@@ -59,10 +46,10 @@ export class RabbitMqBillingPublisher
   async publish(message: BillingJobMessage): Promise<void> {
     const channel = await this.ensureConnection();
 
-    const envelope = createNestRmqEventEnvelope(this.routingKey, message);
+    const envelope = createNestRmqEventEnvelope(this.topology.routingKey, message);
     const body = Buffer.from(JSON.stringify(envelope));
 
-    channel.publish(this.exchange, this.routingKey, body, {
+    channel.publish(this.topology.exchange, this.topology.routingKey, body, {
       persistent: true,
       contentType: 'application/json',
       messageId: message.jobId,
