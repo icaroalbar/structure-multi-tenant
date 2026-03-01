@@ -18,5 +18,14 @@ describe('CreateBillingJobUseCase', () => {
     expect(result.customerId).toBe('customer-1');
     expect(result.amount).toBe(150);
     expect(publishMock).toHaveBeenCalledTimes(1);
+    expect(publishMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        jobId: expect.any(String),
+        tenantId: 'tenant-a',
+        customerId: 'customer-1',
+        amount: 150,
+        issuedAt: expect.any(String),
+      }),
+    );
   });
 });

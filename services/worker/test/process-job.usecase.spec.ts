@@ -10,7 +10,13 @@ describe('ProcessJobUseCase', () => {
     const useCase = new ProcessJobUseCase(redisIdempotencyService);
 
     await expect(
-      useCase.execute({ jobId: '1', tenantId: 'tenant-a', payload: {} })
+      useCase.execute({
+        jobId: '1',
+        tenantId: 'tenant-a',
+        customerId: 'customer-1',
+        amount: 100,
+        issuedAt: '2026-03-01T00:00:00.000Z'
+      })
     ).resolves.toBe('duplicate');
   });
 
@@ -25,7 +31,9 @@ describe('ProcessJobUseCase', () => {
       useCase.execute({
         jobId: '1',
         tenantId: 'tenant-a',
-        payload: {},
+        customerId: 'customer-1',
+        amount: 100,
+        issuedAt: '2026-03-01T00:00:00.000Z',
         forceError: true
       })
     ).rejects.toThrow('Forced failure to route message to DLQ');

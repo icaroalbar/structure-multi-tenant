@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Channel, ChannelModel, connect } from 'amqplib';
+import { createNestRmqEventEnvelope } from '../../../../../../shared/contracts/billing-job.contract';
 import {
   BillingJobMessage,
   BillingPublisher,
@@ -58,7 +59,9 @@ export class RabbitMqBillingPublisher
   async publish(message: BillingJobMessage): Promise<void> {
     const channel = await this.ensureConnection();
 
-    const body = Buffer.from(JSON.stringify(message));
+    const envelope = createNestRmqEventEnvelope(this.routingKey, message);
+    const body = Buffer.from(JSON.stringify(envelope));
+
     channel.publish(this.exchange, this.routingKey, body, {
       persistent: true,
       contentType: 'application/json',

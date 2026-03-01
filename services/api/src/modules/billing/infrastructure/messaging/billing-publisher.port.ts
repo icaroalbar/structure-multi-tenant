@@ -1,12 +1,7 @@
-export const BILLING_PUBLISHER = Symbol('BILLING_PUBLISHER');
+import type { BillingJobMessage } from '../../../../../../shared/contracts/billing-job.contract';
 
-export interface BillingJobMessage {
-  jobId: string;
-  tenantId: string;
-  customerId: string;
-  amount: number;
-  issuedAt: string;
-}
+export const BILLING_PUBLISHER = Symbol('BILLING_PUBLISHER');
+export type { BillingJobMessage };
 
 export interface BillingPublisher {
   publish(message: BillingJobMessage): Promise<void>;
