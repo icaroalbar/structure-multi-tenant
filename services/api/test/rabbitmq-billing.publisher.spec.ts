@@ -2,10 +2,14 @@ import type { Channel, ChannelModel } from 'amqplib';
 import { connect } from 'amqplib';
 
 import { createNestRmqEventEnvelope } from '../../shared/contracts/billing-job.contract';
+import { injectTraceContextToHeaders } from '../../shared/observability/rmq-trace-context';
 import { RabbitMqBillingPublisher } from '../src/modules/billing/infrastructure/messaging/rabbitmq-billing.publisher';
 
 jest.mock('amqplib', () => ({
   connect: jest.fn()
+}));
+jest.mock('../../shared/observability/rmq-trace-context', () => ({
+  injectTraceContextToHeaders: jest.fn()
 }));
 
 describe('RabbitMqBillingPublisher', () => {
@@ -29,6 +33,9 @@ describe('RabbitMqBillingPublisher', () => {
     process.env = originalEnv;
     jest.clearAllMocks();
     connectMock.mockResolvedValue(connection);
+    (injectTraceContextToHeaders as jest.Mock).mockReturnValue({
+      traceparent: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01'
+    });
   });
 
   afterAll(() => {
@@ -56,9 +63,13 @@ describe('RabbitMqBillingPublisher', () => {
         persistent: true,
         contentType: 'application/json',
         messageId: message.jobId,
-        timestamp: expect.any(Number)
+        timestamp: expect.any(Number),
+        headers: expect.objectContaining({
+          traceparent: expect.any(String)
+        })
       })
     );
+    expect(injectTraceContextToHeaders).toHaveBeenCalled();
 
     const body = (channel.publish as jest.Mock).mock.calls[0][2] as Buffer;
 
