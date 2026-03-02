@@ -72,4 +72,39 @@ describe('writeStructuredLog', () => {
     expect(error.message).toBe('RabbitMQ unavailable');
     expect(typeof error.stack).toBe('string');
   });
+
+  it('preserves falsy primitive error values', () => {
+    writeStructuredLog(logger, 'error', {
+      service: 'platform-worker',
+      event: 'worker.failure.empty',
+      error: ''
+    });
+    writeStructuredLog(logger, 'error', {
+      service: 'platform-worker',
+      event: 'worker.failure.zero',
+      error: 0
+    });
+    writeStructuredLog(logger, 'error', {
+      service: 'platform-worker',
+      event: 'worker.failure.false',
+      error: false
+    });
+
+    const first = JSON.parse((logger.error as jest.Mock).mock.calls[0][0] as string) as Record<
+      string,
+      unknown
+    >;
+    const second = JSON.parse((logger.error as jest.Mock).mock.calls[1][0] as string) as Record<
+      string,
+      unknown
+    >;
+    const third = JSON.parse((logger.error as jest.Mock).mock.calls[2][0] as string) as Record<
+      string,
+      unknown
+    >;
+
+    expect(first.error).toBe('');
+    expect(second.error).toBe(0);
+    expect(third.error).toBe(false);
+  });
 });

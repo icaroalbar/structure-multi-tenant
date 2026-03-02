@@ -25,7 +25,7 @@ interface StructuredLogRecord {
 }
 
 function normalizeError(error: unknown): unknown {
-  if (!error) {
+  if (error === null || error === undefined) {
     return null;
   }
 
