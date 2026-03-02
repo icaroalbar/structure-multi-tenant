@@ -19,6 +19,7 @@ jobs:
           node-version: 20
 
       - run: npm install
+      - run: npm run validate:drift
       - run: npm run lint || echo "No lint script"
       - run: npm run typecheck || echo "No typecheck script"
       - run: npm run test -- --coverage || echo "No test script"
