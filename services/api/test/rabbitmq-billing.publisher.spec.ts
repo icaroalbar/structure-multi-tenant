@@ -110,4 +110,36 @@ describe('RabbitMqBillingPublisher', () => {
       'billing.jobs.custom.dlq.route'
     );
   });
+
+  it('serializes connection bootstrap when publish runs concurrently', async () => {
+    const delayedConnection = {
+      createChannel: jest.fn(async () => {
+        await new Promise(resolve => setTimeout(resolve, 20));
+        return channel;
+      }),
+      close: jest.fn().mockResolvedValue(undefined)
+    } as unknown as ChannelModel;
+    connectMock.mockImplementation(async () => {
+      await new Promise(resolve => setTimeout(resolve, 20));
+      return delayedConnection;
+    });
+
+    const publisher = new RabbitMqBillingPublisher();
+    const baseMessage = {
+      tenantId: 'tenant-a',
+      customerId: 'customer-1',
+      amount: 100,
+      issuedAt: '2026-03-01T00:00:00.000Z'
+    };
+
+    await Promise.all([
+      publisher.publish({ ...baseMessage, jobId: 'job-1' }),
+      publisher.publish({ ...baseMessage, jobId: 'job-2' }),
+      publisher.publish({ ...baseMessage, jobId: 'job-3' })
+    ]);
+
+    expect(connectMock).toHaveBeenCalledTimes(1);
+    expect(delayedConnection.createChannel).toHaveBeenCalledTimes(1);
+    expect(channel.publish).toHaveBeenCalledTimes(3);
+  });
 });
