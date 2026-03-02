@@ -4,6 +4,7 @@
   "private": true,
   "description": "Base multi-tenant platform with NestJS API and worker",
   "scripts": {
+    "validate:drift": "bash scripts/validate-scaffolding-drift.sh",
     "build": "npm run build:api && npm run build:worker",
     "build:api": "tsc -p services/api/tsconfig.build.json",
     "build:worker": "tsc -p services/worker/tsconfig.build.json",
