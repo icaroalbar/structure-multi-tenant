@@ -26,6 +26,9 @@ describe('Worker legacy flow cleanup', () => {
     const mainSource = readFileSync(mainFilePath, 'utf8');
 
     expect(mainSource).toContain("import { WorkerModule } from './worker.module';");
+    expect(mainSource).toMatch(
+      /NestFactory\.createMicroservice(?:<[^>]+>)?\(\s*WorkerModule\b/
+    );
     expect(mainSource).not.toContain('AppModule');
   });
 });
