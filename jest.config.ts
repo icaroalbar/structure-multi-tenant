@@ -9,10 +9,11 @@ const config: Config = {
   collectCoverageFrom: ['services/**/*.ts', '!services/**/main.ts'],
   coverageThreshold: {
     global: {
-      branches: 35,
-      functions: 45,
-      lines: 45,
-      statements: 45
+      // Fase 1 de endurecimento do baseline global.
+      branches: 70,
+      functions: 70,
+      lines: 75,
+      statements: 75
     },
     './services/worker/src/interfaces/messages/job.consumer.ts': {
       branches: 100,
