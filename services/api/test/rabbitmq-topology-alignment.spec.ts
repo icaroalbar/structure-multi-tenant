@@ -19,12 +19,13 @@ describe('RabbitMQ topology alignment between API and Worker', () => {
     };
     jest.resetModules();
 
-    const { RABBITMQ_TOPOLOGY } = await import(
+    // `node16` module resolution is stricter for dynamic `import()` paths in TS tests.
+    const { RABBITMQ_TOPOLOGY } = require(
       '../../worker/src/infrastructure/messaging/rabbitmq.constants'
-    );
-    const { RabbitMqBillingPublisher } = await import(
+    ) as typeof import('../../worker/src/infrastructure/messaging/rabbitmq.constants');
+    const { RabbitMqBillingPublisher } = require(
       '../src/modules/billing/infrastructure/messaging/rabbitmq-billing.publisher'
-    );
+    ) as typeof import('../src/modules/billing/infrastructure/messaging/rabbitmq-billing.publisher');
 
     const publisher = new RabbitMqBillingPublisher() as unknown as {
       topology: typeof RABBITMQ_TOPOLOGY;
