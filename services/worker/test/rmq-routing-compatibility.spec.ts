@@ -10,6 +10,9 @@ import { createWorkerRmqOptions } from '../src/infrastructure/messaging/rabbitmq
 describe('Nest RMQ routing compatibility', () => {
   it('dispatches the handler when message uses pattern/data envelope', async () => {
     const options = createWorkerRmqOptions().options;
+    if (!options) {
+      throw new Error('Worker RMQ options are required for this compatibility test');
+    }
     const server = new ServerRMQ(options);
     const handler = jest.fn().mockResolvedValue(undefined);
 
