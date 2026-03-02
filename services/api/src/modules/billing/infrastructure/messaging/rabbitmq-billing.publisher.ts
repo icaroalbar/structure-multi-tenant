@@ -8,6 +8,7 @@ import {
 import { Channel, ChannelModel, connect } from 'amqplib';
 import { createNestRmqEventEnvelope } from '../../../../../../shared/contracts/billing-job.contract';
 import { injectTraceContextToHeaders } from '../../../../../../shared/observability/rmq-trace-context';
+import { writeStructuredLog } from '../../../../../../shared/observability/structured-logger';
 import {
   declareRabbitMqTopology,
   resolveRabbitMqTopology
@@ -40,8 +41,14 @@ export class RabbitMqBillingPublisher
     try {
       await this.ensureConnection();
     } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
-      this.logger.warn(`RabbitMQ unavailable on startup (${reason}). Publisher will retry lazily.`);
+      writeStructuredLog(this.logger, 'warn', {
+        service: 'platform-api',
+        event: 'api.rabbitmq.publisher.startup_unavailable',
+        error,
+        metadata: {
+          retryMode: 'lazy'
+        }
+      });
     }
   }
 
