@@ -3,8 +3,14 @@
   "compilerOptions": {
     "rootDir": "..",
     "outDir": "../../dist",
-    "types": ["node", "jest"]
+    "types": ["node"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts", "../shared/**/*.ts"],
-  "exclude": ["../../node_modules", "../../dist"]
+  "include": ["src/**/*.ts", "../shared/**/*.ts"],
+  "exclude": [
+    "test/**/*.ts",
+    "**/*.spec.ts",
+    "../shared/**/*.spec.ts",
+    "../../node_modules",
+    "../../dist"
+  ]
 }

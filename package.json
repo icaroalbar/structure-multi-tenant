@@ -4,8 +4,14 @@
   "private": true,
   "description": "Base multi-tenant platform with NestJS API and worker",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "npm run build:api && npm run build:worker",
+    "build:api": "tsc -p services/api/tsconfig.build.json",
+    "build:worker": "tsc -p services/worker/tsconfig.build.json",
+    "typecheck": "npm run typecheck:api && npm run typecheck:worker",
+    "typecheck:api": "tsc -p services/api/tsconfig.json --noEmit",
+    "typecheck:worker": "tsc -p services/worker/tsconfig.json --noEmit",
+    "typecheck:api:test": "tsc -p services/api/tsconfig.spec.json --noEmit",
+    "typecheck:worker:test": "tsc -p services/worker/tsconfig.spec.json --noEmit",
     "test": "jest --runInBand",
     "start:api": "ts-node services/api/src/main.ts",
     "start:worker": "ts-node services/worker/src/main.ts"
