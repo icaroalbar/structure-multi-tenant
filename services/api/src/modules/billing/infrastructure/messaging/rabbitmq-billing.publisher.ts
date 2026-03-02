@@ -32,6 +32,7 @@ export class RabbitMqBillingPublisher
   });
   private connection?: ChannelModel;
   private channel?: Channel;
+  private connectionInFlight?: Promise<Channel>;
 
   private readonly topology = resolveRabbitMqTopology();
 
@@ -49,13 +50,35 @@ export class RabbitMqBillingPublisher
       return this.channel;
     }
 
-    this.connection = await connect(this.topology.url);
-    const channel = await this.connection.createChannel();
-    this.channel = channel;
+    if (!this.connectionInFlight) {
+      this.connectionInFlight = this.connectAndDeclareTopology()
+        .catch(error => {
+          this.channel = undefined;
+          this.connection = undefined;
+          throw error;
+        })
+        .finally(() => {
+          this.connectionInFlight = undefined;
+        });
+    }
 
-    await declareRabbitMqTopology(channel, this.topology);
+    return this.connectionInFlight;
+  }
 
-    return channel;
+  private async connectAndDeclareTopology(): Promise<Channel> {
+    const connection = await connect(this.topology.url);
+    this.connection = connection;
+
+    try {
+      const channel = await connection.createChannel();
+      await declareRabbitMqTopology(channel, this.topology);
+      this.channel = channel;
+      return channel;
+    } catch (error) {
+      await connection.close().catch(() => undefined);
+      this.connection = undefined;
+      throw error;
+    }
   }
 
   async publish(message: BillingJobMessage): Promise<void> {
