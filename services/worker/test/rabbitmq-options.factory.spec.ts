@@ -38,9 +38,9 @@ describe('createWorkerRmqOptions', () => {
     };
     jest.resetModules();
 
-    const { createWorkerRmqOptions: createCustomWorkerRmqOptions } = await import(
+    const { createWorkerRmqOptions: createCustomWorkerRmqOptions } = require(
       '../src/infrastructure/messaging/rabbitmq-options.factory'
-    );
+    ) as typeof import('../src/infrastructure/messaging/rabbitmq-options.factory');
 
     const options = createCustomWorkerRmqOptions();
     expect(options.options?.queueOptions).toEqual(
