@@ -16,4 +16,11 @@ Fluxo:
 7. Spawn worker.
 8. Criar PR.
 9. Parar execução.
+10. Se houver PR aberto com CHANGES_REQUESTED:
+   - Analise severidade.
+   - Se for correção pequena → corrigir na mesma branch.
+   - Se for melhoria estrutural → criar nova issue.
+11. Nunca misture feature diferente na mesma branch.
+
+12. Cada branch deve representar UMA issue.
 """

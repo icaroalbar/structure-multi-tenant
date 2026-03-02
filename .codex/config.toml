@@ -1,14 +1,18 @@
-[features]
-multi_agent = true
-
-[agents]
-max_threads = 6
-max_depth = 1
+[agents.manager]
+description = "Coordena execução da plataforma."
+config_file = "manager.toml"
 
 [agents.platform_architect]
-description = "Arquiteto de plataforma containerizada enterprise."
-config_file = "agents/platform-architect.toml"
+description = "Define arquitetura técnica."
+config_file = "platform-architect.toml"
 
 [agents.worker]
-description = "Executa geração de arquivos seguindo arquitetura."
-config_file = "agents/worker.toml"
+description = "Executa implementação."
+config_file = "worker.toml"
+
+[agents.qa]
+description = "Valida testes."
+config_file = "qa.toml"
+
+[agents.issue_generator]
+config_file = "issue-generator.toml"
